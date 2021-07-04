@@ -3,6 +3,7 @@ import GitHub from './components/db';
 import gitHubQuery from './components/query';
 import RepoInfo from './components/RepoInfo';
 import SearchBox from './components/SearchBox';
+import NavButtons from './components/NavButtons';
 
 const App = () => {
     let [repos, setRepos] = useState([]);
@@ -11,9 +12,22 @@ const App = () => {
     let [totalCount, setTotalCount] = useState(0);
     let [queryUser, setQueryUser] = useState('alishkeir');
 
+    let [startCursor, setStartCursor] = useState(null);
+    let [endCursor, setEndCursor] = useState(null);
+    let [hasPrevPage, setHasPrevPage] = useState(false);
+    let [hasNextPage, setHasNextPage] = useState(true);
+    let [paginationKeyword, setPaginationKeyword] = useState('first');
+    let [paginationString, setPaginationString] = useState(' ');
+
     const getData = useCallback(() => {
         const queryText = JSON.stringify(
-            gitHubQuery(pageCount, queryString, queryUser)
+            gitHubQuery(
+                pageCount,
+                queryString,
+                queryUser,
+                paginationKeyword,
+                paginationString
+            )
         );
 
         fetch(GitHub.baseURL, {
@@ -23,13 +37,28 @@ const App = () => {
         })
             .then((res) => res.json())
             .then((data) => {
-                const repositories = data.data.search.nodes;
+                const repositories = data.data.search.edges;
                 const total = data.data.search.repositoryCount;
+                const start = data.data.search.pageInfo?.startCursor;
+                const end = data.data.search.pageInfo?.endCursor;
+                const next = data.data.search.pageInfo?.hasNextPage;
+                const prev = data.data.search.pageInfo?.hasPreviousPage;
+
                 setRepos(repositories);
                 setTotalCount(total);
+                setStartCursor(start);
+                setEndCursor(end);
+                setHasNextPage(next);
+                setHasPrevPage(prev);
             })
             .catch((err) => console.log(err));
-    }, [pageCount, queryString, queryUser]);
+    }, [
+        pageCount,
+        queryString,
+        queryUser,
+        paginationKeyword,
+        paginationString,
+    ]);
 
     useEffect(() => {
         getData();
@@ -52,14 +81,24 @@ const App = () => {
                 onQueryChange={(myString) => {
                     setQueryString(myString);
                 }}
-                onUserChange={(user) => {
-                    setQueryUser(user);
+                setQueryUser={setQueryUser}
+                setPaginationString={setPaginationString}
+                setPaginationKeyword={setPaginationKeyword}
+            />
+            <NavButtons
+                start={startCursor}
+                end={endCursor}
+                next={hasNextPage}
+                prev={hasPrevPage}
+                onPage={(myKeyword, myString) => {
+                    setPaginationKeyword(myKeyword);
+                    setPaginationString(myString);
                 }}
             />
             {repos && (
                 <ul className='list-group list-group-flush mt-5'>
                     {repos.map((repo) => (
-                        <RepoInfo key={repo.id} repo={repo} />
+                        <RepoInfo key={repo.node.id} repo={repo.node} />
                     ))}
                 </ul>
             )}

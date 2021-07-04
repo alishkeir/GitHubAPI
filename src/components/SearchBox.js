@@ -6,8 +6,10 @@ const SearchBox = ({
     queryString,
     onTotalChange,
     onQueryChange,
-    onUserChange,
+    setQueryUser,
     queryUser,
+    setPaginationString,
+    setPaginationKeyword,
 }) => {
     const [username, setUsername] = useState(queryUser);
     return (
@@ -17,7 +19,9 @@ const SearchBox = ({
                     className='w-100 me-2'
                     onSubmit={(e) => {
                         e.preventDefault();
-                        onUserChange(username);
+                        setQueryUser(username);
+                        setPaginationString('');
+                        setPaginationKeyword('first');
                     }}
                 >
                     <input
