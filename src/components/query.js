@@ -1,11 +1,13 @@
-const gitHubQuery = {
-    query: `
+const gitHubQuery = (pageCount, queryString, queryUser) => {
+    return {
+        query: `
              {
                viewer {
                  name
                }
-               search(query: "user:alishkeir sort:updated-desc", type: REPOSITORY, first: 50) {
-                 nodes {
+               search(query: "${queryString} user:${queryUser} sort:updated-desc", type: REPOSITORY, first: ${pageCount}) {
+                repositoryCount 
+                nodes {
                    ... on Repository {
                      name
                      description
@@ -20,6 +22,7 @@ const gitHubQuery = {
                }
              } 
           `,
+    };
 };
 
 export default gitHubQuery;
